@@ -1,4 +1,21 @@
 # BoxBot
+This is the central repository housing all components for BoxBot into one functional application.
+
+## Modules
+* BoxBot Core API by @justinpotts
+* BoxBot.me Website by @justinpotts, @OhNoYouSquidnt
+* Boxcutter Texting API by @jeffw16
+
+## Requirements for each module
+* BoxBot Core API
+ * Flask
+ * SQLAlchemy
+ * Werkzeug
+* BoxBot.me Website
+ * None
+* Boxcutter Texting API
+ * PHP
+ * Twilio PHP client library
 
 ## Install and Run
 
