@@ -135,5 +135,18 @@ def become_a_shopper():
         return render_template('becomeashopper.html', form=form, error=error)
     return render_template('becomeashopper.html', form=form)
 
+# Communication
+
+@app.route('/order')
+def initial_order_text():
+    users = User.query.filter_by(is_shopper=True).all()
+    for user in users:
+        '''
+        twilio_api(message='Order request from user.firstname. Order details: Colgate Toothpaste (2) for delivery in two hours. Can you grab this?',
+                   recipient=user.phonenumber,
+                   reply-to=?twilionumber?)
+        '''
+    return 'Order successfully placed. You will receive another message upon contact with a personal shopper.'
+
 if __name__ == '__main__':
     app.run(debug=True)
