@@ -1,0 +1,60 @@
+{% extends "layout.html" %}
+{% block body %}
+  <form action="becomeashopper" method=post>
+    <h2>Become a Shopper</h2>
+    {% for message in form.firstname.errors %}
+    <div class="alert alert-danger">{{ message }}</div>
+    {% endfor %}
+    {% for message in form.lastname.errors %}
+    <div class="alert alert-danger">{{ message }}</div>
+    {% endfor %}
+    {% for message in form.zipcode.errors %}
+    <div class="alert alert-danger">{{ message }}</div>
+    {% endfor %}
+    {% for message in form.phonenumber.errors %}
+    <div class="alert alert-danger">{{ message }}</div>
+    {% endfor %}
+    {% for message in form.email.errors %}
+    <div class="alert alert-danger">{{ message }}</div>
+    {% endfor %}
+    {% for message in form.password.errors %}
+    <div class="alert alert-danger">{{ message }}</div>
+    {% endfor %}
+    {% for message in form.confirm.errors %}
+    <div class="alert alert-danger">{{ message }}</div>
+    {% endfor %}
+    {% for message in form.accept_tos.errors %}
+    <div class="alert alert-danger">{{ message }}</div>
+    {% endfor %}
+    {% if error %}
+    <div class="alert alert-danger">{{ error }}</div>
+    {% endif %}
+    {{ form.hidden_tag() }}
+
+    <div id="signform">{{ form.firstname.label }}:</div>
+    <div id="formfield">{{ form.firstname }}</div>
+
+    <div id="signform">{{ form.lastname.label }}:</div>
+    <div id="formfield">{{ form.lastname }}</div>
+
+    <div id="signform">{{ form.phonenumber.label }}:</div>
+    <div id="formfield">{{ form.phonenumber }}</div>
+
+    <div id="signform">{{ form.zipcode.label }}:</div>
+    <div id="formfield">{{ form.zipcode }}</div>
+
+    <div id="signform">{{ form.email.label }}:</div>
+    <div id="formfield">{{ form.email }}</div>
+
+    <div id="signform">{{ form.password.label }}:</div>
+    <div id="formfield">{{ form.password }}</div>
+
+    <div id="signform">{{ form.confirm.label }}:</div>
+    <div id="formfield">{{ form.confirm }}</div>
+
+    <p>I accept the <a href=termsofservice>Terms of Service</a>   {{ form.accept_tos }}</p>
+
+    <p>{{ form.submit }}</p>
+  </form>
+  <p>Or <a href="signin">Sign In</a>.</p>
+{% endblock %}

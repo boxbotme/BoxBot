@@ -1,0 +1,15 @@
+<html>
+    <head>
+        <title>BoxBot</title>
+    </head>
+    <body>
+        {% if session.signed_in %}
+            <a href="/signout">Sign Out</a>
+        {% else %}
+            <a href="/signin">Sign In</a> | <a href="/join">Join</a> | <a href="/becomeashopper">Become a Shopper</a>
+        {% endif %}
+        {% block body %}
+
+        {% endblock %}
+    </body>
+</html>

@@ -1,0 +1,14 @@
+{% extends "layout.html" %}
+{% block body %}
+    {% if message %}<p>{{ message }}</p>{% endif %}
+    <h1>Welcome to BoxBot.</h1>
+    {% if session.signed_in %}
+        {% if session.is_shopper %}
+            <h3>Get started with your deliveries.</h3>
+        {% else %}
+            <h3>Start ordering items today!</h3>
+        {% endif %}
+    {% else %}
+        <h3>Personal shoppers at your fingertips.</h3>
+    {% endif %}
+{% endblock %}
