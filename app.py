@@ -5,6 +5,8 @@ from forms import joinForm
 
 from werkzeug.security import generate_password_hash, check_password_hash
 
+import twilio.twiml
+
 app = Flask(__name__)
 app.config.from_object(__name__)
 
@@ -24,6 +26,9 @@ class User(db.Model):
     email = db.Column(db.String(120), unique=True)
     password = db.Column(db.String(100))
     is_shopper = db.Column(db.Boolean())
+    order_status = db.Column(db.Integer)
+    product_name = db.Column(db.String(120))
+    product_quantity = db.Column(db.Integer)
 
     def __init__(self, firstname, lastname, zipcode, phonenumber, email, password, is_shopper):
         self.firstname = firstname
@@ -140,13 +145,17 @@ def become_a_shopper():
 @app.route('/order')
 def initial_order_text():
     users = User.query.filter_by(is_shopper=True).all()
+    
     for user in users:
-        '''
-        twilio_api(message='Order request from user.firstname. Order details: Colgate Toothpaste (2) for delivery in two hours. Can you grab this?',
-                   recipient=user.phonenumber,
-                   reply-to=?twilionumber?)
-        '''
-    return 'Order successfully placed. You will receive another message upon contact with a personal shopper.'
+        if user.order_status is 0:
+            # make sure to shorten message to ensure SMS does not exceed 160 GSM chars or 70 UCS-2 chars!
+            twilio_api(message='Order request from user.firstname. Order details: user.product_name (user.product_quantity) for delivery in two hours. Can you grab this?',
+                       recipient=user.phonenumber,
+                       reply-to='+19723759851')
+            user.order_status = 1
+            return 'Order successfully placed. You will receive another message upon contact with a personal shopper.'
+        else:
+            return 'Order was not placed, because you have not yet finished your existing order.'
 
 if __name__ == '__main__':
     app.run(debug=True)
