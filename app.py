@@ -6,6 +6,7 @@ from forms import joinForm
 from werkzeug.security import generate_password_hash, check_password_hash
 
 import twilio.twiml
+import settings
 
 app = Flask(__name__)
 app.config.from_object(__name__)
@@ -13,7 +14,7 @@ app.config.from_object(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:////tmp/boxbot.db'
 db = SQLAlchemy(app)
 
-app.secret_key = 'secret!'
+app.secret_key = settings.secret_key
 
 # Database Setup
 
@@ -145,13 +146,14 @@ def become_a_shopper():
 @app.route('/order')
 def initial_order_text():
     users = User.query.filter_by(is_shopper=True).all()
-    
+
     for user in users:
         if user.order_status is 0:
             # make sure to shorten message to ensure SMS does not exceed 160 GSM chars or 70 UCS-2 chars!
-            twilio_api(message='Order request from user.firstname. Order details: user.product_name (user.product_quantity) for delivery in two hours. Can you grab this?',
-                       recipient=user.phonenumber,
-                       reply-to='+19723759851')
+            settings.twilio_account_sid = 'secret!'
+            settings.twilio_auth_token = 'secret!'
+            client = TwilioRestClient(account_sid, auth_token)
+            message = client.messages.create( to=user.phonenumber, from='+19723759851', body='Order request from user.firstname. Order details: user.product_name (user.product_quantity) for delivery in two hours. Can you grab this?' )
             user.order_status = 1
             return 'Order successfully placed. You will receive another message upon contact with a personal shopper.'
         else:
