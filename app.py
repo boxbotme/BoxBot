@@ -5,7 +5,7 @@ from forms import joinForm
 
 from werkzeug.security import generate_password_hash, check_password_hash
 
-import twilio.twiml
+from twilio.rest import TwilioRestClient
 import settings
 
 app = Flask(__name__)
@@ -27,9 +27,6 @@ class User(db.Model):
     email = db.Column(db.String(120), unique=True)
     password = db.Column(db.String(100))
     is_shopper = db.Column(db.Boolean())
-    order_status = db.Column(db.Integer)
-    product_name = db.Column(db.String(120))
-    product_quantity = db.Column(db.Integer)
 
     def __init__(self, firstname, lastname, zipcode, phonenumber, email, password, is_shopper):
         self.firstname = firstname
@@ -48,6 +45,22 @@ class User(db.Model):
 
     def __repr__(self):
         return '<User %r>' % self.email
+
+class Order(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    product = db.Column(db.String(50))
+    quantity = db.Column(db.Integer())
+    status = db.Column(db.String(10))       # pending, in-transit, delivered
+
+    def __init__(self, user_id, product, quantity):
+        self.user_id = user_id
+        self.product = product
+        self.quantity = quantity
+        self.status = 'pending'
+
+    def __repr__(self):
+        return (self.product + " " + self.quantity + " " + self.status)
 
 # Page Navigation
 
@@ -72,7 +85,9 @@ def signin():
                     error = 'Invalid password.'
                 else:
                     session['signed_in'] = True
+                    session['firstname'] = user.firstname
                     session['email'] = user.email
+                    session['phonenumber'] = user.phonenumber
                     session['is_shopper'] = user.is_shopper
                     return redirect('/')
                 return render_template('join.html', error=error)
@@ -107,7 +122,9 @@ def join():
             db.session.commit()
             message = 'You have successfully signed up for BoxBot.'
             session['signed_in'] = True
+            session['firstname'] = user.firstname
             session['email'] = user.email
+            session['phonenumber'] = user.phonenumber
             session['is_shopper'] = user.is_shopper
             return render_template('index.html', message=message)
         error = 'That email is already being used by another account. Please sign in, or use a different email.'
@@ -144,20 +161,53 @@ def become_a_shopper():
 # Communication
 
 @app.route('/order')
-def initial_order_text():
-    users = User.query.filter_by(is_shopper=True).all()
+def order():
+    user = User.query.filter_by(email=session.get('phonenumber')).first()
+    personal_shoppers = User.query.filter_by(is_shopper=True).all()
 
-    for user in users:
-        if user.order_status is 0:
+    for shopper in personal_shoppers:
+        #if user.order_status is 0:
             # make sure to shorten message to ensure SMS does not exceed 160 GSM chars or 70 UCS-2 chars!
-            settings.twilio_account_sid = 'secret!'
-            settings.twilio_auth_token = 'secret!'
-            client = TwilioRestClient(account_sid, auth_token)
-            message = client.messages.create( to=user.phonenumber, from='+19723759851', body='Order request from user.firstname. Order details: user.product_name (user.product_quantity) for delivery in two hours. Can you grab this?' )
-            user.order_status = 1
-            return 'Order successfully placed. You will receive another message upon contact with a personal shopper.'
-        else:
-            return 'Order was not placed, because you have not yet finished your existing order.'
+        '''
+        Comment out test values for use in production, and add parameters to method header.
+
+        self.product = product
+        self.quantity = quantity
+        '''
+        product = 'Test Product'
+        quantity = 2
+
+        if quantity > 1:
+            product += 's'
+
+        #order = new Order(user.id, product, quantity)
+        #db.session.add(order)
+        #db.session.commit()
+
+        client = TwilioRestClient(settings.twilio_account_sid, settings.twilio_auth_token)
+
+        # Send personal shopper outreach message
+        message = client.messages.create(body=session.get('firstname') + ' needs ' + str(quantity) + ' ' + product + ' for delivery in one hour. Can you grab this?',
+                                         to=shopper.phonenumber,
+                                         from_='+19723759851')
+
+        # Send customer confirmation message
+        message = client.messages.create(body='Your order is being processed! We\'ll update you as your status changes regarding your ' + str(quantity) + ' ' + product + '. Let us know if there\'s an issue. Happy shopping!',
+                                         to=session.get('phonenumber'),
+                                         from_='+19723759851')
+
+        '''
+        REPLIES WE NEED TO HANDLE
+
+        Customer: Cancelling
+        Personal shopper: Invite Decline, Invite Accept
+        '''
+
+        message = 'Order successful. We will update you as your delivery status changes.'
+        return render_template('index.html', message=message)
+        #else:
+            #return 'Order was not placed, because you have not yet finished your existing order.'
+        return 'None'
 
 if __name__ == '__main__':
     app.run(debug=True)

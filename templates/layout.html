@@ -4,6 +4,11 @@
     </head>
     <body>
         {% if session.signed_in %}
+            {% if session.is_shopper %}
+
+            {% else %}
+                <a href="/order">Order</a>
+            {% endif %}
             <a href="/signout">Sign Out</a>
         {% else %}
             <a href="/signin">Sign In</a> | <a href="/join">Join</a> | <a href="/becomeashopper">Become a Shopper</a>
