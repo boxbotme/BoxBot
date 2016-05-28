@@ -48,19 +48,26 @@ class User(db.Model):
 
 class Order(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    customer_user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    shopper_user_id = db.Column(db.Integer())
     product = db.Column(db.String(50))
     quantity = db.Column(db.Integer())
-    status = db.Column(db.String(10))       # pending, in-transit, delivered
+    status = db.Column(db.String(10))       # pending, in-transit, delivered, received
 
-    def __init__(self, user_id, product, quantity):
-        self.user_id = user_id
+    def __init__(self, customer_user_id, shopper_user_id, product, quantity):
+        self.customer_user_id = customer_user_id
+        self.shopper_user_id = shopper_user_id
         self.product = product
         self.quantity = quantity
         self.status = 'pending'
 
     def __repr__(self):
         return (self.product + " " + self.quantity + " " + self.status)
+
+def send_text(to, body):
+    client = TwilioRestClient(settings.twilio_account_sid, settings.twilio_auth_token)
+    message = client.messages.create(body=body, to_=to, from_='+19723759851')
+    return True
 
 # Page Navigation
 
@@ -184,17 +191,11 @@ def order():
         #db.session.add(order)
         #db.session.commit()
 
-        client = TwilioRestClient(settings.twilio_account_sid, settings.twilio_auth_token)
-
         # Send personal shopper outreach message
-        message = client.messages.create(body=session.get('firstname') + ' needs ' + str(quantity) + ' ' + product + ' for delivery in one hour. Can you grab this?',
-                                         to=shopper.phonenumber,
-                                         from_='+19723759851')
+        send_text(shopper.phonenumber, session.get('firstname') + ' needs ' + str(quantity) + ' ' + product + ' for delivery in one hour. Can you grab this? Respond Yes or No.')
 
         # Send customer confirmation message
-        message = client.messages.create(body='Your order is being processed! We\'ll update you as your status changes regarding your ' + str(quantity) + ' ' + product + '. Let us know if there\'s an issue. Happy shopping!',
-                                         to=session.get('phonenumber'),
-                                         from_='+19723759851')
+        send_text(session.get('phonenumber'), 'Your order is being processed! We\'ll update you as your status changes regarding your ' + str(quantity) + ' ' + product + '. Let us know if there\'s an issue. Happy shopping!')
 
         '''
         REPLIES WE NEED TO HANDLE
@@ -208,6 +209,41 @@ def order():
         #else:
             #return 'Order was not placed, because you have not yet finished your existing order.'
         return 'None'
+
+@app.route('/twilio', methods=['POST'])
+def twilio():
+    form = joinForm(request.form)
+    if request.method == 'POST' and form.validate():
+        user = User.query.filter_by(phonenumber=form.From.data).first()
+        msg = form.Body.data
+        if user is not None:
+            order = Order.query.filter_by(user_id=user.id).first()
+            if user.is_shopper:
+                if user.id is order.user_id:
+                    status = order.status
+                    if status is 'pending' and 'yes' in msg.lower():
+                        status = 'in-transit'
+                        # respond to customer
+                        cust_message="Your personal shopper " + user.firstname + " will be shopping for you today. Stay tuned!"
+                        # respond to shopper
+                        shpr_message="Thanks! When you're done, just reply with DELIVERED."
+                    elif status is 'in-transit' and 'delivered' in msg.lower():
+                        status = 'delivered'
+                        # respond to customer
+                        cust_message="Your personal shopper has delivered! When you've received your items, confirm delivery by replying RECEIVED."
+                        # respond to shopper
+                        shpr_message="Great job. Waiting for customer to confirm delivery."
+            else:
+                if user.id is order.user.id:
+                    status = order.status
+                    if status is 'delivered' and 'received' in msg.lower():
+                        status = 'received'
+                        # respond to shopper
+                        shpr_message="Your customer has confirmed they've received their desired items. Thanks for delivering!"
+                        # respond to customer
+                        cust_message="We hope you enjoyed your BoxBot experience and we hope you'll shop with us next time :)"
+            send_text(User.query.filter_by(user_id=order.customer_user_id).first().phonenumber, cust_message)
+            send_text(User.query.filter_by(user_id=order.shopper_user_id).first().phonenumber, shpr_message)
 
 if __name__ == '__main__':
     app.run(debug=True)
