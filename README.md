@@ -3,8 +3,8 @@ This is the central repository housing all components for BoxBot into one functi
 
 ## Modules
 * BoxBot Core API by @justinpotts
-* BoxBot.me Website by @justinpotts, @OhNoYouSquidnt
-* Boxcutter Texting API by @jeffw16
+* BoxBot.me Website by @OhNoYouSquidnt
+* Boxcutter Texting API by @jeffw16 (integrated into BoxBot)
 
 ## Requirements for each module
 * BoxBot Core API
@@ -12,10 +12,9 @@ This is the central repository housing all components for BoxBot into one functi
  * SQLAlchemy
  * Werkzeug
 * BoxBot.me Website
- * None
+ * Uses Bootstrap 3 (included)
 * Boxcutter Texting API
- * PHP
- * Twilio PHP client library
+ * Twilio Helper Library (Python)
 
 ## Install and Run
 
