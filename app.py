@@ -52,7 +52,7 @@ class Order(db.Model):
     shopper_user_id = db.Column(db.Integer())
     product = db.Column(db.String(50))
     quantity = db.Column(db.Integer())
-    status = db.Column(db.String(10))       # pending, in-transit, delivered, received
+    status = db.Column(db.String(10))       # pending, transit, delivered, received, dispute
 
     def __init__(self, customer_user_id, shopper_user_id, product, quantity):
         self.customer_user_id = customer_user_id
@@ -64,9 +64,22 @@ class Order(db.Model):
     def __repr__(self):
         return (self.product + " " + self.quantity + " " + self.status)
 
+    def set_status(self, status):
+        self.status = status
+        return True
+
+    def set_customer_user_id(self, cuid):
+        self.customer_user_id = cuid
+        return True
+
+    def set_shopper_user_id(self, spid):
+        self.shopper_user_id = spid
+        return True
+
 def send_text(to, body):
     client = TwilioRestClient(settings.twilio_account_sid, settings.twilio_auth_token)
     message = client.messages.create(body=body, to_=to, from_='+19723759851')
+    app.logger.info('Success TXT_send_final to ' + to + ' containing ' + body)
     return True
 
 # Page Navigation
@@ -213,38 +226,80 @@ def newOrder():
 
 @app.route('/twilio', methods=['POST'])
 def twilio():
-    form = joinForm(request.form)
-    if request.method == 'POST' and form.validate():
-        user = User.query.filter_by(phonenumber=form.From.data).first()
-        msg = form.Body.data
+    app.logger.info("Checkpoint TXT_OTH_A0")
+    #form = joinForm(request.form)
+    if request.method == 'POST':
+        clean_phonenumber = request.form['From'][2:]
+        user = User.query.filter_by(phonenumber=clean_phonenumber).first()
+        msg = request.form['Body']
         if user is not None:
-            order = Order.query.filter_by(user_id=user.id).first()
-            if user.is_shopper:
-                if user.id is order.user_id:
+            #order = Order.query.filter_by(user_id=user.id).first()
+            if user.is_shopper is True:
+                order = Order.query.filter_by(shopper_user_id=user.id).first()
+                if user.id is order.shopper_user_id:
+                #if True:
                     status = order.status
-                    if status is 'pending' and 'yes' in msg.lower():
-                        status = 'in-transit'
+                    if ( 'pending' in status ) and ( 'Yes' in msg ):
+                        order.set_status('transit')
+                        order.set_shopper_user_id(user.id)
+                        db.session.commit()
                         # respond to customer
                         cust_message="Your personal shopper " + user.firstname + " will be shopping for you today. Stay tuned!"
                         # respond to shopper
-                        shpr_message="Thanks! When you're done, just reply with DELIVERED."
-                    elif status is 'in-transit' and 'delivered' in msg.lower():
-                        status = 'delivered'
+                        shpr_message="Thanks! When you're done, just reply with Delivered."
+                    elif 'transit' in status and 'Delivered' in msg and user.id is order.shopper_user_id:
+                        order.set_status('delivered')
+                        db.session.commit()
                         # respond to customer
-                        cust_message="Your personal shopper has delivered! When you've received your items, confirm delivery by replying RECEIVED."
+                        cust_message="Your personal shopper has delivered! When you've received your items, confirm delivery by replying Received, else reply Dispute"
                         # respond to shopper
                         shpr_message="Great job. Waiting for customer to confirm delivery."
+                    else:
+                        shpr_message="Invalid command. Status of delivery:[" + status + "], and message:[" + msg + "]"
+                        app.logger.info("Error TXT_OTH_A5")
+                else:
+                    shpr_message="Invalid command."
+                    app.logger.info("Error TXT_OTH_A4")
             else:
-                if user.id is order.user.id:
+                order = Order.query.filter_by(customer_user_id=user.id).first()
+                if user.id is order.customer_user_id:
                     status = order.status
-                    if status is 'delivered' and 'received' in msg.lower():
-                        status = 'received'
+                    if 'delivered' in status and 'Received' in msg:
+                        order.set_status('received')
+                        db.session.commit()
                         # respond to shopper
                         shpr_message="Your customer has confirmed they've received their desired items. Thanks for delivering!"
                         # respond to customer
                         cust_message="We hope you enjoyed your BoxBot experience and we hope you'll shop with us next time :)"
-            send_text(User.query.filter_by(user_id=order.customer_user_id).first().phonenumber, cust_message)
-            send_text(User.query.filter_by(user_id=order.shopper_user_id).first().phonenumber, shpr_message)
+                    elif 'delivered' in status and 'Dispute' in msg:
+                        order.set_status('dispute')
+                        db.session.commit()
+                        cust_message="You are disputing your delivery. We will investigate into your situation."
+                    else:
+                        cust_message="Invalid command."
+                        app.logger.info("Error TXT_OTH_A3")
+                else:
+                    cust_message="Invalid command."
+                    app.logger.info("Error TXT_OTH_A2")
+            try:
+                send_text(User.query.filter_by(id=order.customer_user_id).first().phonenumber, cust_message)
+            except NameError:
+                # do nothing but cry
+                app.logger.info("No cust")
+            try:
+                send_text(User.query.filter_by(id=order.shopper_user_id).first().phonenumber, shpr_message)
+            except NameError:
+                # not much to cry about except we have to ugh
+                app.logger.info("No shpr")
+        else:
+            send_text(request.form['From'], "Sign up for BoxBot today by visiting https://boxbot.me")
+            app.logger.info("Error TXT_OTH_A1")
+    else:
+        app.logger.info("Form data no es bueno")
+    app.logger.info("Success TXT_prefinal")
+    db.session.commit()
+    app.logger.info("Success TXT_final")
+    return render_template('index.html', message='Hey')
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(debug=True,host='0.0.0.0',port=5000)
