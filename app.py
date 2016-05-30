@@ -88,7 +88,7 @@ def signin():
                 password = request.form['password']
                 if email != user.email:
                     error = 'Invalid email address.'
-                if user.check_password(password) is False:
+                elif user.check_password(password) is False:
                     error = 'Invalid password.'
                 else:
                     session['signed_in'] = True
@@ -168,9 +168,10 @@ def become_a_shopper():
 # Communication
 
 @app.route('/order')
-def order():
-    user = User.query.filter_by(email=session.get('phonenumber')).first()
+def newOrder():
+    user = User.query.filter_by(email=session.get('email')).first()
     personal_shoppers = User.query.filter_by(is_shopper=True).all()
+    message = ''
 
     for shopper in personal_shoppers:
         #if user.order_status is 0:
@@ -187,9 +188,9 @@ def order():
         if quantity > 1:
             product += 's'
 
-        #order = new Order(user.id, product, quantity)
-        #db.session.add(order)
-        #db.session.commit()
+        myOrder = Order(user.id, shopper.id, product, quantity)
+        db.session.add(myOrder)
+        db.session.commit()
 
         # Send personal shopper outreach message
         send_text(shopper.phonenumber, session.get('firstname') + ' needs ' + str(quantity) + ' ' + product + ' for delivery in one hour. Can you grab this? Respond Yes or No.')
@@ -205,10 +206,10 @@ def order():
         '''
 
         message = 'Order successful. We will update you as your delivery status changes.'
-        return render_template('index.html', message=message)
-        #else:
-            #return 'Order was not placed, because you have not yet finished your existing order.'
-        return 'None'
+    return render_template('index.html', message=message)
+    #else:
+        #return 'Order was not placed, because you have not yet finished your existing order.'
+    #return 'None'
 
 @app.route('/twilio', methods=['POST'])
 def twilio():
