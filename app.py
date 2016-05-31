@@ -21,7 +21,7 @@ app.secret_key = settings.secret_key
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     firstname = db.Column(db.String(120))           # Do these need to be unique=True as well?
-    lasname = db.Column(db.String(120))
+    lastname = db.Column(db.String(120))
     zipcode = db.Column(db.Integer)
     phonenumber = db.Column(db.String(120))
     email = db.Column(db.String(120), unique=True)
