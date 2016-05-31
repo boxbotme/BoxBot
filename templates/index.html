@@ -1,14 +1,149 @@
 {% extends "layout.html" %}
 {% block body %}
-    {% if message %}<p>{{ message }}</p>{% endif %}
-    <h1>Welcome to BoxBot.</h1>
-    {% if session.signed_in %}
-        {% if session.is_shopper %}
-            <h3>Get started with your deliveries.</h3>
-        {% else %}
-            <h3>Start ordering items today!</h3>
-        {% endif %}
-    {% else %}
-        <h3>Personal shoppers at your fingertips.</h3>
-    {% endif %}
+<!-- Page Content -->
+<div class="container-fluid">
+
+        <div class="col-lg-6 container-pk" style="background-color:#EB6361" width="50%">
+          <div class="text-center vert-center">
+          <h1 class="text-center" style="color:#fff">
+            <img src="{{ url_for('static', filename='bottext.png') }}" id="text" height="50%" width="50%"></img>
+            <div class="row">
+              <img src="{{ url_for('static', filename='botlogo.png') }}" id="logo" height="25%" width="25%"></img>
+            </div>
+            <div class="row">
+              <h2 style="font-size:18px">Personal shoppers at your fingertips.</h2>
+            </div>
+            <div class="row">
+              <a class="btn btn-lg" data-toggle="modal" data-target="#signinCustomer">Join BoxBot</a>
+            </div>
+          </h1>
+        </div>
+
+      </div>
+
+        <div class="col-lg-6 container-wt" style="background-color:#FFFFFF;margin-right:0%;margin-left:0%">
+          <a class="btn btn-lg-inv" style="margin-top:25px;margin-right:25px;float:right" data-toggle="modal" data-target="#signin">Sign in</a>
+          <div class="text-center vert-center-two" style="margin-left:25%;margin-right:15%">
+              <h1 style="color:#000">Want to make some extra cash?</h1>
+              <div class="row">
+
+                <h2 style="font-size:18px;padding-top:5%">Join BoxBot as a personal shopper.</h2>
+
+              </div>
+              <div class="row">
+                <div class="vert-center-three">
+                <a class="btn btn-lg-blk" data-toggle="modal" data-target="#signinShopper">Become a Shopper</a>
+              </div>
+              </div>
+            </div>
+        </div>
+
+<!-- jQuery -->
+<script src="{{ url_for('static', filename='jquery.js') }}"></script>
+
+<!-- Bootstrap Core JavaScript -->
+<script src="{{ url_for('static', filename='bootstrap.min.js') }}"></script>
+
+<!-- Modal -->
+<div class="modal fade" id="signin" tabindex="-1" role="dialog" aria-labelledby="signinLabel" style="margin-top:25px">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content" >
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title text-center" id="signinLabel"><img src="{{ url_for('static', filename='botlogo-color.png') }}" style="height:15%;width:15%"></img></h4>
+      </div>
+      <div class="modal-body">
+        <form class="form-signin">
+          <label for="inputEmail" class="sr-only" >Email address</label>
+          <input type="email" id="inputEmail" class="form-control" placeholder="Email address" required autofocus>
+          <p> </p>
+          <label for="inputPassword" class="sr-only">Password</label>
+          <input type="password" id="inputPassword" class="form-control" placeholder="Password" required>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-primary">Next</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="signinCustomer" tabindex="-1" role="dialog" aria-labelledby="signinCustomerLabel">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content" >
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title text-center" id="signinCustomerLabel"><img src="{{ url_for('static', filename='botlogo-color.png') }}" style="height:15%;width:15%"></img></h4>
+      </div>
+      <div class="modal-body">
+        <form class="form-signin">
+          <label for="inputZip" class="sr-only" >Zipcode</label>
+          <input type="zipcode" id="inputZip" class="form-control" placeholder="Zipcode" required autofocus>
+          <hr>
+          <label for="inputFName" class="sr-only" >First Name</label>
+          <input type="firstname" id="inputFName" class="form-control" placeholder="First Name" required autofocus>
+          <p> </p>
+          <label for="inputLName" class="sr-only" >Last Name</label>
+          <input type="lastname" id="inputLName" class="form-control" placeholder="Last Name" required autofocus>
+          <hr>
+          <label for="inputEmail" class="sr-only" >Email address</label>
+          <input type="email" id="inputEmail" class="form-control" placeholder="Email address" required autofocus>
+          <p> </p>
+          <label for="inputPhone" class="sr-only" >Phone number</label>
+          <input type="phone" id="inputPhone" class="form-control" placeholder="Phone number" required autofocus>
+          <p> </p>
+          <label for="inputAddress" class="sr-only" >Address</label>
+          <input type="address" id="inputAddress" class="form-control" placeholder="Address" required autofocus>
+          <hr>
+          <label for="inputPassword" class="sr-only">Password</label>
+          <input type="password" id="inputPassword" class="form-control" placeholder="Password" required>
+          <p> </p>
+          <label for="inputPasswordConfirm" class="sr-only">Confirm Password</label>
+          <input type="passwordConfirm" id="inputPasswordConfirm" class="form-control" placeholder="Confirm Password" required>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-primary">Next</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="signinShopper" tabindex="-1" role="dialog" aria-labelledby="signinShopperLabel">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content" >
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title text-center" id="signinShopperLabel"><img src="{{ url_for('static', filename='botlogo-color.png') }}" style="height:15%;width:15%"></img></h4>
+      </div>
+      <div class="modal-body">
+        <form class="form-signin">
+          <label for="inputZip" class="sr-only" >Zipcode</label>
+          <input type="zipcode" id="inputZip" class="form-control" placeholder="Zipcode" required autofocus>
+          <hr>
+          <label for="inputFName" class="sr-only" >First Name</label>
+          <input type="firstname" id="inputFName" class="form-control" placeholder="First Name" required autofocus>
+          <p> </p>
+          <label for="inputLName" class="sr-only" >Last Name</label>
+          <input type="lastname" id="inputLName" class="form-control" placeholder="Last Name" required autofocus>
+          <hr>
+          <label for="inputEmail" class="sr-only" >Email address</label>
+          <input type="email" id="inputEmail" class="form-control" placeholder="Email address" required autofocus>
+          <p> </p>
+          <label for="inputPhone" class="sr-only" >Phone number</label>
+          <input type="phone" id="inputPhone" class="form-control" placeholder="Phone number" required autofocus>
+          <hr>
+          <label for="inputPassword" class="sr-only">Password</label>
+          <input type="password" id="inputPassword" class="form-control" placeholder="Password" required>
+          <p> </p>
+          <label for="inputPasswordConfirm" class="sr-only">Confirm Password</label>
+          <input type="passwordConfirm" id="inputPasswordConfirm" class="form-control" placeholder="Confirm Password" required>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-primary">Next</button>
+      </div>
+    </div>
+  </div>
+</div>
 {% endblock %}
